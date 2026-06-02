@@ -8,7 +8,8 @@
         :root {
             --bg-color: #0d0e12;
             --card-bg: #161822;
-            --accent-color: #ff6b00; /* Стильный оранжевый */
+            --accent-color: #00a3ff; /* Стильный голубой вместо оранжевого */
+            --accent-hover: #0082cc;
             --text-color: #ffffff;
             --text-muted: #8b8e99;
             --error-color: #ff3333;
@@ -34,7 +35,7 @@
             border-radius: 24px;
             padding: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255, 107, 0, 0.1);
+            border: 1px solid rgba(0, 163, 255, 0.1);
             text-align: center;
         }
 
@@ -52,13 +53,32 @@
             cursor: pointer;
             width: 100%;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 163, 255, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 107, 0, 0.5); }
+        .btn:hover { transform: translateY(-2px); background: var(--accent-hover); box-shadow: 0 6px 20px rgba(0, 163, 255, 0.5); }
         .btn:disabled { background: #444; box-shadow: none; cursor:not-allowed; }
         
+        .btn-google {
+            background: #ffffff;
+            color: #1f2230;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        }
+        .btn-google:hover {
+            background: #f1f3f4;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+        }
+        .btn-google svg {
+            width: 20px;
+            height: 20px;
+        }
+
         .btn-secondary { background: #222533; color: white; box-shadow: none; margin-top: 10px; }
-        .btn-secondary:hover { background: #2c3044; box-shadow: none; }
+        .btn-secondary:hover { background: #2c3044; box-shadow: none; transform: none; }
 
         .hidden { display: none !important; }
 
@@ -90,7 +110,7 @@
         input:focus, select:focus { border-color: var(--accent-color); outline: none; }
         
         .list-item { background: #1f2230; padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-        .delete-btn { background: var(--error-color); border: none; color: white; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+        .delete-btn { background: var(--error-color); border: none; color: white; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -100,7 +120,15 @@
         <div id="login-screen">
             <h1>VPN Access</h1>
             <p>Войдите через Google, чтобы получить свой персональный ключ доступа.</p>
-            <button class="btn" id="login-btn">Войти через Google</button>
+            <button class="btn btn-google" id="login-btn">
+                <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                </svg>
+                Войти через Google
+            </button>
         </div>
 
         <!-- Экран блокировки -->
@@ -163,7 +191,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+        import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, getDocs, where, addDoc, limit } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
         // КОНФИГУРАЦИЯ ТВОЕГО ПРОЕКТА FIREBASE
@@ -195,16 +223,11 @@
         const blockedScreen = document.getElementById('blocked-screen');
         const adminSection = document.getElementById('admin-section');
         
-        // Авторизация с обработчиком ошибок для вывода на телефоне
+        // Авторизация через Мобильный Редирект (чтобы не было ошибок сессии)
         document.getElementById('login-btn').addEventListener('click', () => {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    console.log("Вход выполнен успешно:", result.user);
-                })
+            signInWithRedirect(auth, provider)
                 .catch((error) => {
-                    console.error("Ошибка авторизации:", error);
-                    // Выводим ошибку в системном окне телефона
-                    alert("ОШИБКА FIREBASE!\n\nКод: " + error.code + "\n\nСообщение: " + error.message);
+                    alert("Ошибка Firebase при клике: " + error.code + "\n" + error.message);
                 });
         });
 
@@ -213,6 +236,18 @@
                 .catch((error) => alert("Ошибка при выходе: " + error.message));
         });
 
+        // Проверяем результат возврата на сайт после авторизации Google
+        getRedirectResult(auth)
+            .then((result) => {
+                if (result) {
+                    console.log("Успешно вернулись после авторизации!");
+                }
+            })
+            .catch((error) => {
+                alert("Ошибка обработки входа Google:\nКод: " + error.code + "\nСообщение: " + error.message);
+            });
+
+        // Слушатель состояния пользователя
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
@@ -224,7 +259,6 @@
                     let userData;
                     
                     if (!userDoc.exists()) {
-                        // Если зашел впервые — проверяем на админа по установленной почте
                         const isCurrentUserAdmin = (user.email === ADMIN_EMAIL);
                         
                         userData = { 
@@ -237,7 +271,6 @@
                     } else {
                         userData = userDoc.data();
                         
-                        // Если зашел существующий юзер, но его почта совпадает с админской
                         if (user.email === ADMIN_EMAIL && !userData.isAdmin) {
                             userData.isAdmin = true;
                             await updateDoc(userDocRef, { isAdmin: true });
@@ -251,7 +284,6 @@
                         return;
                     }
 
-                    // Настройка отображения профиля юзера
                     document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/36';
                     document.getElementById('user-display-name').textContent = user.displayName || user.email;
                     loginScreen.classList.add('hidden');
@@ -265,7 +297,7 @@
 
                     checkUserKey();
                 } catch (dbError) {
-                    alert("Ошибка базы данных Firestore: " + dbError.message + "\n\nПроверьте правила доступа Rules в Firebase Console!");
+                    alert("Ошибка Firestore: " + dbError.message + "\n\nУбедитесь, что Rules (Правила) в Firestore открыты!");
                 }
             } else {
                 currentUser = null;
@@ -276,7 +308,7 @@
             }
         });
 
-        // Проверка, привязан ли ключ за пользователем
+        // Проверка привязанного ключа
         async function checkUserKey() {
             try {
                 const q = query(collection(db, "vpn_keys"), where("userId", "==", currentUser.uid), limit(1));
@@ -323,7 +355,7 @@
             }
         }
 
-        // Логика получения свободного ключа кнопкой
+        // Забрать ключ из пула
         document.getElementById('get-key-btn').addEventListener('click', async () => {
             try {
                 const q = query(collection(db, "vpn_keys"), where("userId", "==", ""), limit(1));
@@ -336,14 +368,14 @@
                     });
                     renderKey({ ...keyDoc.data(), userId: currentUser.uid });
                 } else {
-                    alert("Свободных ключей в базе пока нет. Пожалуйста, попросите администратора добавить их.");
+                    alert("Свободных ключей пока нет. Обратитесь к администратору.");
                 }
             } catch (keyErr) {
-                alert("Не удалось забрать ключ: " + keyErr.message);
+                alert("Ошибка выдачи ключа: " + keyErr.message);
             }
         });
 
-        // Загрузка зарегистрированных юзеров в админку
+        // Панель админа
         async function loadAdminPanel() {
             try {
                 const usersSnapshot = await getDocs(collection(db, "users"));
@@ -367,29 +399,29 @@
 
                     listContainer.appendChild(item);
 
-                    // Вешаем обработчик клика на кнопку блокировки
-                    document.getElementById(`block-btn-${userDoc.id}`).style.backgroundColor = u.isBlocked ? 'var(--success-color)' : 'var(--error-color)';
-                    document.getElementById(`block-btn-${userDoc.id}`).addEventListener('click', async () => {
+                    const currentBtn = document.getElementById(`block-btn-${userDoc.id}`);
+                    currentBtn.style.backgroundColor = u.isBlocked ? 'var(--success-color)' : 'var(--error-color)';
+                    currentBtn.addEventListener('click', async () => {
                         try {
                             await updateDoc(doc(db, "users", userDoc.id), { isBlocked: !u.isBlocked });
                             loadAdminPanel(); 
                         } catch (blockErr) {
-                            alert("Ошибка изменения статуса пользователя: " + blockErr.message);
+                            alert("Не удалось изменить статус: " + blockErr.message);
                         }
                     });
                 });
             } catch (adminPanelErr) {
-                console.error("Ошибка админ-панели:", adminPanelErr);
+                console.error("Ошибка обновления списка пользователей:", adminPanelErr);
             }
         }
 
-        // Создание ключа администратором
+        // Создание ключа админом
         document.getElementById('add-key-btn').addEventListener('click', async () => {
             const val = document.getElementById('new-key-value').value;
             const type = document.getElementById('new-key-type').value;
             const expiryInput = document.getElementById('new-key-expiry').value;
 
-            if (!val || !expiryInput) return alert("Заполните абсолютно все поля формы");
+            if (!val || !expiryInput) return alert("Заполните все поля создания ключа!");
 
             try {
                 const expiryDate = new Date(expiryInput);
@@ -401,12 +433,12 @@
                     userId: ""
                 });
 
-                alert("Ключ успешно добавлен в общую базу!");
+                alert("Ключ успешно добавлен!");
                 document.getElementById('new-key-value').value = "";
                 document.getElementById('new-key-expiry').value = "";
                 loadAdminPanel();
             } catch (addKeyErr) {
-                alert("Ошибка добавления ключа: " + addKeyErr.message);
+                alert("Ошибка базы при добавлении ключа: " + addKeyErr.message);
             }
         });
     </script>
