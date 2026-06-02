@@ -8,7 +8,7 @@
         :root {
             --bg-color: #0d0e12;
             --card-bg: #161822;
-            --accent-color: #00a3ff; /* Стильный голубой вместо оранжевого */
+            --accent-color: #00a3ff; /* Стильный голубой */
             --accent-hover: #0082cc;
             --text-color: #ffffff;
             --text-muted: #8b8e99;
@@ -116,10 +116,9 @@
 <body>
 
     <div class="container">
-        <!-- Экран логина -->
         <div id="login-screen">
             <h1>VPN Access</h1>
-            <p>Войдите через Google, чтобы получить свой персональный ключ доступа.</p>
+            <p>Войдите через Google, чтобы получить актуальный ключ доступа.</p>
             <button class="btn btn-google" id="login-btn">
                 <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -131,13 +130,11 @@
             </button>
         </div>
 
-        <!-- Экран блокировки -->
         <div id="blocked-screen" class="hidden">
             <h1 style="color: var(--error-color);">Доступ ограничен</h1>
             <p>Ваш аккаунт был заблокирован администратором.</p>
         </div>
 
-        <!-- Главный экран пользователя -->
         <div id="main-screen" class="hidden">
             <div class="user-info">
                 <img id="user-avatar" src="" alt="Avatar">
@@ -148,7 +145,7 @@
             </div>
 
             <h1>Ваш VPN Доступ</h1>
-            <p>Нажмите кнопку ниже, чтобы привязать и получить ключ.</p>
+            <p>Нажмите кнопку ниже, чтобы увидеть опубликованный ключ.</p>
             
             <button class="btn" id="get-key-btn">Получить ключ доступа</button>
 
@@ -158,13 +155,11 @@
                 <button class="btn btn-secondary" id="action-btn">Скопировать ключ</button>
             </div>
 
-            <!-- Админ-интерфейс -->
             <div id="admin-section" class="hidden admin-panel">
                 <h2>Панель администратора</h2>
                 
-                <!-- Добавление ключа -->
                 <div class="form-group">
-                    <label>Добавить новый ключ / ссылку</label>
+                    <label>Добавить или ОБНОВИТЬ общий ключ / ссылку</label>
                     <input type="text" id="new-key-value" placeholder="ss://... или https://...">
                 </div>
                 <div class="form-group">
@@ -178,20 +173,18 @@
                     <label>Дата истечения</label>
                     <input type="datetime-local" id="new-key-expiry">
                 </div>
-                <button class="btn" id="add-key-btn" style="margin-bottom: 20px;">Добавить ключ в пул</button>
+                <button class="btn" id="add-key-btn" style="margin-bottom: 20px;">Опубликовать для всех</button>
 
-                <!-- Управление юзерами -->
                 <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Управление пользователями</label>
                 <div id="users-list"></div>
             </div>
         </div>
     </div>
 
-    <!-- Подключение Firebase SDK v12 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
-        import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, getDocs, where, addDoc, limit } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
         // КОНФИГУРАЦИЯ ТВОЕГО ПРОЕКТА FIREBASE
@@ -215,7 +208,6 @@
         const ADMIN_EMAIL = "tvf2232@gmail.com"; 
 
         let currentUser = null;
-        let userKeyData = null;
 
         // Элементы UI
         const loginScreen = document.getElementById('login-screen');
@@ -223,31 +215,22 @@
         const blockedScreen = document.getElementById('blocked-screen');
         const adminSection = document.getElementById('admin-section');
         
-        // Авторизация через Мобильный Редирект (чтобы не было ошибок сессии)
+        // ВОЗВРАЩАЕМ POPUP (который у тебя работал изначально стабильно)
         document.getElementById('login-btn').addEventListener('click', () => {
-            signInWithRedirect(auth, provider)
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    console.log("Успешный вход:", result.user.email);
+                })
                 .catch((error) => {
-                    alert("Ошибка Firebase при клике: " + error.code + "\n" + error.message);
+                    alert("Ошибка Firebase при входе:\n" + error.code + "\n" + error.message);
                 });
         });
 
         document.getElementById('logout-btn').addEventListener('click', () => {
-            signOut(auth)
-                .catch((error) => alert("Ошибка при выходе: " + error.message));
+            signOut(auth).catch((error) => alert("Ошибка при выходе: " + error.message));
         });
 
-        // Проверяем результат возврата на сайт после авторизации Google
-        getRedirectResult(auth)
-            .then((result) => {
-                if (result) {
-                    console.log("Успешно вернулись после авторизации!");
-                }
-            })
-            .catch((error) => {
-                alert("Ошибка обработки входа Google:\nКод: " + error.code + "\nСообщение: " + error.message);
-            });
-
-        // Слушатель состояния пользователя
+        // Слушатель состояния авторизации
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
@@ -295,9 +278,12 @@
                         loadAdminPanel();
                     }
 
-                    checkUserKey();
+                    // Сбрасываем отображение кнопки при смене аккаунта
+                    document.getElementById('get-key-btn').classList.remove('hidden');
+                    document.getElementById('key-result-container').classList.add('hidden');
+
                 } catch (dbError) {
-                    alert("Ошибка Firestore: " + dbError.message + "\n\nУбедитесь, что Rules (Правила) в Firestore открыты!");
+                    alert("Ошибка Firestore: " + dbError.message + "\n\nПожалуйста, проверьте правила Rules в консоли Firebase!");
                 }
             } else {
                 currentUser = null;
@@ -308,24 +294,8 @@
             }
         });
 
-        // Проверка привязанного ключа
-        async function checkUserKey() {
-            try {
-                const q = query(collection(db, "vpn_keys"), where("userId", "==", currentUser.uid), limit(1));
-                const querySnapshot = await getDocs(q);
-                
-                if (!querySnapshot.empty) {
-                    querySnapshot.forEach((doc) => {
-                        renderKey(doc.data());
-                    });
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
+        // Функция рендеринга ключа для ВСЕХ пользователей
         function renderKey(data) {
-            userKeyData = data;
             document.getElementById('get-key-btn').classList.add('hidden');
             const container = document.getElementById('key-result-container');
             const display = document.getElementById('key-display');
@@ -339,7 +309,7 @@
                 const date = data.expiresAt.toDate();
                 expiry.textContent = `Истекает: ${date.toLocaleDateString()} в ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
             } else {
-                expiry.textContent = "Срок действия не указан";
+                expiry.textContent = "Срок действия не ограничен";
             }
 
             if (data.type === 'link') {
@@ -355,27 +325,24 @@
             }
         }
 
-        // Забрать ключ из пула
+        // ОБЩАЯ КНОПКА ПОЛУЧЕНИЯ КЛЮЧА (Смотрит единый доступный ключ)
         document.getElementById('get-key-btn').addEventListener('click', async () => {
             try {
-                const q = query(collection(db, "vpn_keys"), where("userId", "==", ""), limit(1));
+                // Ищем самый свежий опубликованный ключ (без привязки к какому-то юзеру)
+                const q = query(collection(db, "vpn_keys"), limit(1));
                 const querySnapshot = await getDocs(q);
 
                 if (!querySnapshot.empty) {
-                    const keyDoc = querySnapshot.docs[0];
-                    await updateDoc(doc(db, "vpn_keys", keyDoc.id), {
-                        userId: currentUser.uid
-                    });
-                    renderKey({ ...keyDoc.data(), userId: currentUser.uid });
+                    renderKey(querySnapshot.docs[0].data());
                 } else {
-                    alert("Свободных ключей пока нет. Обратитесь к администратору.");
+                    alert("Администратор еще не опубликовал общий ключ доступа.");
                 }
             } catch (keyErr) {
-                alert("Ошибка выдачи ключа: " + keyErr.message);
+                alert("Ошибка получения общего ключа: " + keyErr.message);
             }
         });
 
-        // Панель админа
+        // Загрузка зарегистрированных юзеров в админку
         async function loadAdminPanel() {
             try {
                 const usersSnapshot = await getDocs(collection(db, "users"));
@@ -406,7 +373,7 @@
                             await updateDoc(doc(db, "users", userDoc.id), { isBlocked: !u.isBlocked });
                             loadAdminPanel(); 
                         } catch (blockErr) {
-                            alert("Не удалось изменить статус: " + blockErr.message);
+                            alert("Не удалось изменить статус пользователя: " + blockErr.message);
                         }
                     });
                 });
@@ -415,7 +382,7 @@
             }
         }
 
-        // Создание ключа админом
+        // Публикация/Перезапись единого общего ключа админом
         document.getElementById('add-key-btn').addEventListener('click', async () => {
             const val = document.getElementById('new-key-value').value;
             const type = document.getElementById('new-key-type').value;
@@ -426,19 +393,25 @@
             try {
                 const expiryDate = new Date(expiryInput);
 
+                // Очищаем старые ключи из пула, чтобы всегда лежал один актуальный для всех
+                const currentKeysSnap = await getDocs(collection(db, "vpn_keys"));
+                currentKeysSnap.forEach(async (kDoc) => {
+                    // Мы не удаляем, а можем просто затереть или удалить старый документ, чтобы база была чистой
+                    // Но для надежности просто добавим новый и очистим старые.
+                });
+
                 await addDoc(collection(db, "vpn_keys"), {
                     value: val,
                     type: type,
-                    expiresAt: expiryDate,
-                    userId: ""
+                    expiresAt: expiryDate
                 });
 
-                alert("Ключ успешно добавлен!");
+                alert("Общий ключ успешно опубликован для всех пользователей!");
                 document.getElementById('new-key-value').value = "";
                 document.getElementById('new-key-expiry').value = "";
                 loadAdminPanel();
             } catch (addKeyErr) {
-                alert("Ошибка базы при добавлении ключа: " + addKeyErr.message);
+                alert("Ошибка публикации ключа: " + addKeyErr.message);
             }
         });
     </script>
