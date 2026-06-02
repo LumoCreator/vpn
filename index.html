@@ -11,7 +11,7 @@
 
     <style>
         :root {
-            /* Палитра Google Material Design 3 (Dark Theme / Dynamic Baseline) */
+            /* MD3 Dark Theme Palette */
             --md-sys-color-background: #111318;
             --md-sys-color-on-background: #e2e2e9;
             --md-sys-color-surface: #1a1c22;
@@ -20,15 +20,20 @@
             --md-sys-color-on-surface-variant: #c3c6cf;
             --md-sys-color-primary: #a8c7fa;
             --md-sys-color-on-primary: #063068;
+            --md-sys-color-primary-container: #0842a0;
+            --md-sys-color-on-primary-container: #d3e3fd;
             --md-sys-color-secondary-container: #33485d;
             --md-sys-color-on-secondary-container: #d2e4ff;
             --md-sys-color-error: #ffb4ab;
-            --md-sys-color-error-container: #850404;
+            --md-sys-color-error-container: #93000a;
             --md-sys-color-on-error-container: #ffdad6;
             --md-sys-color-outline: #8c9199;
+            --md-sys-color-inverse-surface: #e2e2e9;
+            --md-sys-color-inverse-on-surface: #2f3036;
             
             --md-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
             --md-motion-duration-short: 0.2s;
+            --md-motion-duration-medium: 0.4s;
         }
 
         * { 
@@ -51,248 +56,258 @@
             overflow-x: hidden;
         }
 
-        /* Контейнер в стиле MD3 Card Component */
+        /* MD3 Card */
         .container {
             width: 100%;
-            max-width: 460px;
+            max-width: 480px;
             background: var(--md-sys-color-surface);
             border-radius: 28px;
-            padding: 24px;
+            padding: 32px;
             position: relative;
-            transition: all var(--md-motion-duration-short) var(--md-motion-easing-standard);
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all var(--md-motion-duration-medium) var(--md-motion-easing-standard);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 18px rgba(0,0,0,0.2);
         }
 
-        h1 { 
-            font-size: 24px; 
-            font-weight: 500; 
-            margin-bottom: 8px; 
-            color: var(--md-sys-color-on-surface);
-            letter-spacing: -0.5px;
-        }
-        
-        p { 
-            color: var(--md-sys-color-on-surface-variant); 
-            font-size: 14px; 
-            margin-bottom: 24px; 
-            line-height: 20px;
-        }
+        h1 { font-size: 24px; font-weight: 500; margin-bottom: 12px; color: var(--md-sys-color-on-surface); letter-spacing: -0.5px; }
+        p { color: var(--md-sys-color-on-surface-variant); font-size: 14px; margin-bottom: 24px; line-height: 20px; }
 
-        /* Кнопки MD3 (Filled, Tonal, Outlined) */
+        /* Иконки Material */
+        .icon { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; line-height: 1; display: inline-block; white-space: nowrap; word-wrap: normal; font-size: 20px; }
+
+        /* MD3 Buttons с поддержкой Ripple */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            height: 40px;
+            height: 44px;
             padding: 0 24px;
-            border-radius: 100px;
+            border-radius: 100px; /* Полностью круглые края */
             font-size: 14px;
             font-weight: 500;
             border: none;
             cursor: pointer;
-            transition: all var(--md-motion-duration-short) var(--md-motion-easing-standard);
+            transition: background-color var(--md-motion-duration-short), box-shadow var(--md-motion-duration-short), transform 0.1s;
             width: 100%;
             position: relative;
-            overflow: hidden;
+            overflow: hidden; /* Важно для Ripple */
+            letter-spacing: 0.1px;
         }
         
-        .btn:active { transform: scale(0.97); }
+        .btn:active { transform: scale(0.98); }
 
-        .btn-filled {
-            background: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary);
+        .btn-filled { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+        .btn-filled:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .btn-filled:hover::after { content:""; position:absolute; inset:0; background: rgba(255,255,255,0.08); pointer-events:none; }
+
+        .btn-tonal { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+        .btn-tonal:hover::after { content:""; position:absolute; inset:0; background: rgba(255,255,255,0.08); pointer-events:none; }
+
+        .btn-danger { background: var(--md-sys-color-error); color: #690005; }
+        .btn-danger:hover::after { content:""; position:absolute; inset:0; background: rgba(255,255,255,0.15); pointer-events:none; }
+
+        .btn-success { background: #b4f0c4; color: #00391c; }
+        .btn-success:hover::after { content:""; position:absolute; inset:0; background: rgba(0,0,0,0.08); pointer-events:none; }
+
+        .btn-google { background: #ffffff; color: #1f2230; height: 48px; border: 1px solid var(--md-sys-color-outline); }
+        .btn-google:hover::after { content:""; position:absolute; inset:0; background: rgba(0,0,0,0.04); pointer-events:none; }
+        .btn-google svg { width: 20px; height: 20px; }
+
+        /* Анимация волны (Ripple) */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple-anim 0.6s cubic-bezier(0.2, 0, 0, 1);
+            background: rgba(255, 255, 255, 0.3);
+            pointer-events: none;
         }
-        .btn-filled:hover { background: #bfd9ff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-
-        .btn-tonal {
-            background: var(--md-sys-color-secondary-container);
-            color: var(--md-sys-color-on-secondary-container);
+        .btn-google .ripple, .btn-success .ripple { background: rgba(0, 0, 0, 0.15); }
+        @keyframes ripple-anim {
+            to { transform: scale(4); opacity: 0; }
         }
-        .btn-tonal:hover { background: #415a73; }
 
-        .btn-google {
-            background: #ffffff;
-            color: #1f2230;
-            height: 44px;
-            border: 1px solid var(--md-sys-color-outline);
-        }
-        .btn-google:hover { background: #f7f9fc; }
-        .btn-google svg { width: 18px; height: 18px; }
+        .hidden { display: none !important; opacity: 0; }
 
-        .btn-danger {
-            background: #ffb4ab;
-            color: #690005;
-        }
-        .btn-danger:hover { background: #ffdad6; }
-
-        .btn-success {
-            background: #b4f0c4;
-            color: #00391c;
-        }
-        .btn-success:hover { background: #d1f7dc; }
-
-        .hidden { display: none !important; opacity: 0; transform: scale(0.95); }
-
-        /* Кабинет пользователя (MD3 User Chip) */
+        /* MD3 User Chip */
         .user-card {
             display: flex;
             align-items: center;
-            background: rgba(255, 255, 255, 0.04);
-            padding: 12px 16px;
-            border-radius: 16px;
-            margin-bottom: 24px;
+            background: var(--md-sys-color-surface-variant);
+            padding: 8px 16px 8px 8px;
+            border-radius: 100px;
+            margin-bottom: 28px;
             text-align: left;
             gap: 12px;
+            width: fit-content;
         }
-        .user-card img { width: 40px; height: 40px; border-radius: 50%; }
-        .user-details { flex-grow: 1; }
-        .user-name { font-weight: 500; font-size: 14px; color: var(--md-sys-color-on-surface); }
+        .user-card img { width: 36px; height: 36px; border-radius: 50%; }
+        .user-details { flex-grow: 1; padding-right: 8px; }
+        .user-name { font-weight: 500; font-size: 13px; color: var(--md-sys-color-on-surface); }
         .logout-btn { 
-            background: none; 
+            background: rgba(255,180,171, 0.15); 
             border: none; 
             color: var(--md-sys-color-error); 
             cursor: pointer; 
             font-size: 12px; 
             font-weight: 500;
-            display: inline-flex;
+            display: flex;
             align-items: center;
-            gap: 4px;
-            margin-top: 2px;
+            justify-content: center;
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            transition: all 0.2s;
         }
+        .logout-btn:hover { background: rgba(255,180,171, 0.25); transform: scale(1.05); }
 
-        /* Вывод ключа (MD3 Container Outlined) */
+        /* MD3 Outlined Container (Ключ) */
         .key-box {
-            background: rgba(0, 0, 0, 0.15);
             border: 1px solid var(--md-sys-color-outline);
-            padding: 16px;
+            padding: 20px;
             border-radius: 16px;
             margin-top: 16px;
             word-break: break-all;
             font-family: monospace;
-            font-size: 14px;
+            font-size: 15px;
             color: var(--md-sys-color-primary);
             text-align: left;
+            background: rgba(168, 199, 250, 0.05);
+            position: relative;
+            overflow: hidden;
         }
         .expiry-text { 
             font-size: 12px; 
             color: var(--md-sys-color-on-surface-variant); 
-            margin-top: 8px; 
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            justify-content: center;
+            margin-top: 12px; 
+            display: flex; align-items: center; gap: 4px; justify-content: center;
         }
 
-        /* Настройки форм по MD3 (Filled Text Fields) */
-        .form-card {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 16px;
+        /* Контейнер кнопок ключа */
+        .key-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
         }
-        .form-group { margin-bottom: 16px; text-align: left; }
+        .key-actions .btn { flex: 1; }
+
+        /* MD3 Text Fields */
+        .form-card {
+            background: var(--md-sys-color-surface-variant);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group { margin-bottom: 16px; text-align: left; position: relative; }
         .form-group label { 
-            display: block; 
-            font-size: 12px; 
-            color: var(--md-sys-color-primary); 
-            margin-bottom: 6px; 
-            font-weight: 500;
+            display: block; font-size: 12px; color: var(--md-sys-color-on-surface-variant); 
+            margin-bottom: 6px; font-weight: 500; padding-left: 4px;
         }
         input, select { 
             width: 100%; 
-            background: var(--md-sys-color-surface-variant); 
+            background: rgba(0,0,0,0.15); 
             border: none;
             border-bottom: 2px solid var(--md-sys-color-outline);
-            padding: 12px; 
-            border-top-left-radius: 4px;
-            border-top-right-radius: 4px;
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
-            color: white; 
-            font-size: 14px;
+            padding: 14px 16px; 
+            border-top-left-radius: 8px; border-top-right-radius: 8px;
+            color: white; font-size: 14px;
             transition: all var(--md-motion-duration-short) var(--md-motion-easing-standard);
         }
         input:focus, select:focus { 
             outline: none; 
             border-bottom-color: var(--md-sys-color-primary);
-            background: #4e525a;
+            background: rgba(0,0,0,0.25);
         }
         
         /* Панель админа */
         .admin-panel { 
-            margin-top: 24px; 
+            margin-top: 32px; 
             padding-top: 24px; 
             border-top: 1px solid rgba(255,255,255,0.08); 
             text-align: left; 
         }
-        .admin-panel h2 { font-size: 18px; font-weight: 500; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .admin-panel h2 { font-size: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px; margin: 0;}
+        .admin-stats { font-size: 12px; background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); padding: 4px 10px; border-radius: 12px; font-weight: 500;}
         
         /* Списки юзеров */
         .list-item { 
             background: rgba(255, 255, 255, 0.03); 
             padding: 12px 16px; 
-            border-radius: 12px; 
+            border-radius: 16px; 
             margin-bottom: 8px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            font-size: 13px; 
         }
-        .list-item-btn {
-            border-radius: 100px;
-            padding: 6px 16px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+        .list-item-info { flex: 1; }
+        .list-item-actions { display: flex; gap: 8px; }
+        .icon-btn {
+            background: transparent; border: none; color: var(--md-sys-color-on-surface-variant);
+            width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            transition: background 0.2s; position: relative; overflow: hidden;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); color: var(--md-sys-color-on-surface); }
+        .status-btn {
+            border-radius: 100px; padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 4px;
         }
 
         /* Экран Спящего режима */
         .sleep-screen { text-align: center; padding: 40px 0; }
-        .sleep-emoji { 
-            font-size: 80px; 
-            margin-bottom: 16px; 
-            display: block; 
-            animation: float 3.5s ease-in-out infinite; 
-        }
+        .sleep-emoji { font-size: 80px; margin-bottom: 16px; display: block; animation: float 3s ease-in-out infinite; }
         @keyframes float {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-12px) rotate(3deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
         }
 
         /* Невидимый триггер админа */
-        .secret-trigger {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 50px;
-            cursor: default; background: transparent; z-index: 9999;
-        }
-
-        /* Окно админ-входа */
+        .secret-trigger { position: absolute; top: 0; left: 0; width: 100%; height: 60px; cursor: default; background: transparent; z-index: 9999; }
+        
         .secret-modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(17, 19, 24, 0.98);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(17, 19, 24, 0.95); backdrop-filter: blur(5px);
             display: flex; justify-content: center; align-items: center;
             z-index: 10000; padding: 16px;
         }
 
-        .icon { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; line-height: 1; display: inline-block; white-space: nowrap; word-wrap: normal; }
+        /* Всплывающие уведомления (MD3 Snackbar) */
+        .md-snackbar {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--md-sys-color-inverse-surface);
+            color: var(--md-sys-color-inverse-on-surface);
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: bottom 0.4s cubic-bezier(0.2, 0, 0, 1);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .md-snackbar.show { bottom: 32px; }
     </style>
 </head>
 <body>
 
+    <div id="snackbar" class="md-snackbar">
+        <span class="icon" id="snackbar-icon">info</span>
+        <span id="snackbar-text">Уведомление</span>
+    </div>
+
     <div class="secret-trigger" id="secret-trigger"></div>
 
     <div class="secret-modal hidden" id="secret-modal">
-        <div class="container">
-            <span class="icon" style="font-size: 48px; color: var(--md-sys-color-primary); margin-bottom: 16px; display:block;">shield_person</span>
-            <h1>Вход для администрации</h1>
-            <p>Пройдите авторизацию для управления конфигурацией сервера.</p>
+        <div class="container" style="text-align: center;">
+            <span class="icon" style="font-size: 56px; color: var(--md-sys-color-primary); margin-bottom: 16px; display:block;">shield_lock</span>
+            <h1>Панель управления</h1>
+            <p>Пройдите авторизацию для доступа к конфигурации базы данных.</p>
             <button class="btn btn-google" id="secret-admin-login-btn" style="margin-bottom: 12px;">
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -300,13 +315,13 @@
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
                 </svg>
-                Войти как Администратор
+                Вход для Администратора
             </button>
             <button class="btn btn-tonal" id="close-secret-modal-btn">Отмена</button>
         </div>
     </div>
 
-    <div class="container">
+    <div class="container" id="main-card">
         
         <div id="sleep-screen" class="sleep-screen hidden">
             <span class="sleep-emoji">😴</span>
@@ -314,10 +329,10 @@
             <p style="margin-bottom: 0;">Попробуйте зайти позже.</p>
         </div>
 
-        <div id="login-screen" class="hidden">
-            <span class="icon" style="font-size: 48px; color: var(--md-sys-color-primary); margin-bottom: 16px; display:block;">vpn_key</span>
-            <h1>VPN Access</h1>
-            <p>Войдите через единый аккаунт Google, чтобы получить актуальный профиль доступа.</p>
+        <div id="login-screen" class="hidden" style="text-align: center;">
+            <span class="icon" style="font-size: 64px; color: var(--md-sys-color-primary); margin-bottom: 16px; display:block;">vpn_key</span>
+            <h1>VPN Access Hub</h1>
+            <p>Единая точка доступа. Войдите через Google, чтобы получить конфигурацию.</p>
             <button class="btn btn-google" id="login-btn">
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -325,75 +340,91 @@
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
                 </svg>
-                Войти через Google
+                Продолжить с Google
             </button>
         </div>
 
-        <div id="blocked-screen" class="hidden">
-            <span class="icon" style="font-size: 64px; color: var(--md-sys-color-error); margin-bottom: 16px; display:block;">block</span>
-            <h1 style="color: var(--md-sys-color-error);">Доступ ограничен</h1>
-            <p>Ваша учетная запись была деактивирована администратором сети.</p>
+        <div id="blocked-screen" class="hidden" style="text-align: center;">
+            <span class="icon" style="font-size: 64px; color: var(--md-sys-color-error); margin-bottom: 16px; display:block;">gpp_bad</span>
+            <h1 style="color: var(--md-sys-color-error);">Доступ закрыт</h1>
+            <p>Ваша учетная запись была заблокирована администратором сети.</p>
         </div>
 
         <div id="main-screen" class="hidden">
-            <div class="user-card">
-                <img id="user-avatar" src="" alt="Avatar">
-                <div class="user-details">
-                    <div class="user-name" id="user-display-name">User Name</div>
-                    <button class="logout-btn" id="logout-btn">
-                        <span class="icon" style="font-size: 14px;">logout</span>Выйти
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div class="user-card">
+                    <img id="user-avatar" src="" alt="Avatar">
+                    <div class="user-details">
+                        <div class="user-name" id="user-display-name">User Name</div>
+                    </div>
+                    <button class="logout-btn" id="logout-btn" title="Выйти">
+                        <span class="icon">logout</span>
                     </button>
                 </div>
             </div>
 
-            <h1>Ваш VPN Доступ</h1>
-            <p>Запросите или скопируйте активную конфигурацию подключения.</p>
+            <h1 style="text-align: center;">Ваш VPN Доступ</h1>
+            <p style="text-align: center;">Запросите активный ключ подключения к сети.</p>
             
             <button class="btn btn-filled" id="get-key-btn">
-                <span class="icon">download_id</span>Получить ключ доступа
+                <span class="icon">key</span>Получить конфигурацию
             </button>
 
             <div id="key-result-container" class="hidden">
-                <div class="key-box" id="key-display">Конфигурация загружается...</div>
+                <div class="key-box" id="key-display">Загрузка...</div>
                 <div class="expiry-text" id="expiry-display">
-                    <span class="icon" style="font-size: 14px;">schedule</span>Истекает: --.--.----
+                    <span class="icon" style="font-size: 16px;">schedule</span>--.--.----
                 </div>
-                <button class="btn btn-tonal" id="action-btn" style="margin-top: 16px;">
-                    <span class="icon" id="action-icon">content_copy</span><span id="action-text">Скопировать ключ</span>
-                </button>
+                
+                <div class="key-actions">
+                    <button class="btn btn-tonal" id="refresh-key-btn">
+                        <span class="icon">sync</span>Обновить
+                    </button>
+                    <button class="btn btn-filled" id="action-btn">
+                        <span class="icon" id="action-icon">content_copy</span><span id="action-text">Копировать</span>
+                    </button>
+                </div>
             </div>
 
             <div id="admin-section" class="hidden admin-panel">
-                <h2><span class="icon">admin_panel_settings</span>Панель администратора</h2>
+                <div class="admin-header">
+                    <h2><span class="icon">admin_panel_settings</span>Администрирование</h2>
+                    <span class="admin-stats" id="users-count-badge">Юзеров: 0</span>
+                </div>
                 
-                <div style="margin-bottom: 20px;">
-                    <button class="btn btn-danger" id="toggle-sleep-btn">
+                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                    <button class="btn btn-danger" id="toggle-sleep-btn" style="flex: 2;">
                         <span class="icon">bedtime</span>Усыпить сайт
+                    </button>
+                    <button class="btn btn-tonal" id="clear-keys-btn" style="flex: 1; padding: 0;" title="Удалить все ключи из БД">
+                        <span class="icon" style="color: var(--md-sys-color-error);">delete_sweep</span>
                     </button>
                 </div>
                 
                 <div class="form-card">
                     <div class="form-group">
-                        <label>ОБЩИЙ КЛЮЧ / ССЫЛКА</label>
-                        <input type="text" id="new-key-value" placeholder="ss://... или https://...">
+                        <label>НОВЫЙ КЛЮЧ / ССЫЛКА</label>
+                        <input type="text" id="new-key-value" placeholder="Например: ss://... или https://...">
                     </div>
-                    <div class="form-group">
-                        <label>ТИП ДАННЫХ</label>
-                        <select id="new-key-type">
-                            <option value="key">Просто текст (Ключ)</option>
-                            <option value="link">Ссылка (Кнопка перехода)</option>
-                        </select>
+                    <div style="display: flex; gap: 12px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>ТИП</label>
+                            <select id="new-key-type">
+                                <option value="key">Текст</option>
+                                <option value="link">Ссылка</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>ИСТЕКАЕТ</label>
+                            <input type="datetime-local" id="new-key-expiry">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>ДАТА ИСТЕЧЕНИЯ</label>
-                        <input type="datetime-local" id="new-key-expiry">
-                    </div>
-                    <button class="btn btn-filled" id="add-key-btn">
-                        <span class="icon">publish</span>Опубликовать для всех
+                    <button class="btn btn-filled" id="add-key-btn" style="margin-top: 8px;">
+                        <span class="icon">publish</span>Опубликовать
                     </button>
                 </div>
 
-                <label style="display:block; font-size:11px; color:var(--md-sys-color-primary); margin-bottom:8px; font-weight:500; letter-spacing:0.5px;">ПОЛЬЗОВАТЕЛИ СЕТИ</label>
+                <label style="display:block; font-size:12px; color:var(--md-sys-color-primary); margin-bottom:12px; font-weight:500;">УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ</label>
                 <div id="users-list"></div>
             </div>
         </div>
@@ -402,7 +433,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, collection, query, addDoc, limit, onSnapshot, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, collection, query, addDoc, limit, onSnapshot, getDocs, deleteDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBJUAa0gk3KPWTgFgLaMmqP5bBVmbTDUDo",
@@ -424,9 +455,37 @@
         let isSiteSleeping = false;
         let secretClickCount = 0;
         let myUserData = null;
-
+        let currentKeyId = null; // Хранит ID текущего отображаемого ключа
         let unsubUsersList = null;
-        let unsubKey = null;
+
+        // MD3 Ripple Effect Script
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement("span");
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+            circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+            circle.classList.add("ripple");
+            const existingRipple = button.querySelector(".ripple");
+            if (existingRipple) existingRipple.remove();
+            button.appendChild(circle);
+        }
+        document.querySelectorAll('.btn, .icon-btn, .status-btn').forEach(btn => {
+            btn.addEventListener('mousedown', createRipple);
+        });
+
+        // MD3 Snackbar Script
+        let snackbarTimeout;
+        function showToast(text, icon = "info") {
+            const snackbar = document.getElementById('snackbar');
+            document.getElementById('snackbar-text').textContent = text;
+            document.getElementById('snackbar-icon').textContent = icon;
+            snackbar.classList.add('show');
+            clearTimeout(snackbarTimeout);
+            snackbarTimeout = setTimeout(() => { snackbar.classList.remove('show'); }, 3500);
+        }
 
         // Элементы UI
         const sleepScreen = document.getElementById('sleep-screen');
@@ -435,11 +494,8 @@
         const blockedScreen = document.getElementById('blocked-screen');
         const adminSection = document.getElementById('admin-section');
         const toggleSleepBtn = document.getElementById('toggle-sleep-btn');
-        
         const secretTrigger = document.getElementById('secret-trigger');
         const secretModal = document.getElementById('secret-modal');
-        const closeSecretModalBtn = document.getElementById('close-secret-modal-btn');
-        const secretAdminLoginBtn = document.getElementById('secret-admin-login-btn');
 
         // Секретный триггер администратора (10 тапов)
         secretTrigger.addEventListener('click', () => {
@@ -450,35 +506,32 @@
             }
         });
 
-        closeSecretModalBtn.addEventListener('click', () => { secretModal.classList.add('hidden'); });
+        document.getElementById('close-secret-modal-btn').addEventListener('click', () => { secretModal.classList.add('hidden'); });
 
         function handleGoogleLogin() {
             signInWithPopup(auth, provider)
-                .then(() => { secretModal.classList.add('hidden'); })
-                .catch((error) => { alert("Ошибка входа Google: " + error.message); });
+                .then(() => { 
+                    secretModal.classList.add('hidden'); 
+                    showToast("Успешный вход", "check_circle");
+                })
+                .catch((error) => { showToast("Ошибка: " + error.message, "error"); });
         }
 
         document.getElementById('login-btn').addEventListener('click', handleGoogleLogin);
-        secretAdminLoginBtn.addEventListener('click', handleGoogleLogin);
+        document.getElementById('secret-admin-login-btn').addEventListener('click', handleGoogleLogin);
 
         document.getElementById('logout-btn').addEventListener('click', () => {
             if (unsubUsersList) unsubUsersList();
-            if (unsubKey) unsubKey();
-            signOut(auth).catch((error) => alert("Ошибка выхода: " + error.message));
+            signOut(auth).then(() => { currentKeyId = null; showToast("Вы вышли из системы", "logout"); });
         });
 
-        // 1. ЖИВОЙ КОРНЕВОЙ СЛУШАТЕЛЬ: Синхронно управляет сном и интерфейсом в реалтайме
+        // 1. Слушатель статуса сайта
         onSnapshot(doc(db, "settings", "status"), (snapshot) => {
-            if (snapshot.exists()) {
-                isSiteSleeping = snapshot.data().isSleeping || false;
-            } else {
-                isSiteSleeping = false;
-            }
+            isSiteSleeping = snapshot.exists() ? (snapshot.data().isSleeping || false) : false;
             updateSleepButtonUI();
             renderInterface();
         });
 
-        // Архитектура рендеринга интерфейса (Вызывается ПРИНУДИТЕЛЬНО при любом изменении в БД)
         function renderInterface() {
             sleepScreen.classList.add('hidden');
             loginScreen.classList.add('hidden');
@@ -488,30 +541,15 @@
 
             const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
 
-            // Живая проверка: Если сайт спит и зашел НЕ админ — моментальный сброс на экран сна
-            if (isSiteSleeping && !isAdmin) {
-                sleepScreen.classList.remove('hidden');
-                return;
-            }
-
-            if (!currentUser) {
-                loginScreen.classList.remove('hidden');
-                return;
-            }
-
-            // Живая проверка: Моментальный бан без перезагрузки страницы
-            if (myUserData && myUserData.isBlocked) {
-                blockedScreen.classList.remove('hidden');
-                return;
-            }
+            if (isSiteSleeping && !isAdmin) { sleepScreen.classList.remove('hidden'); return; }
+            if (!currentUser) { loginScreen.classList.remove('hidden'); return; }
+            if (myUserData && myUserData.isBlocked) { blockedScreen.classList.remove('hidden'); return; }
 
             mainScreen.classList.remove('hidden');
             document.getElementById('user-avatar').src = currentUser.photoURL || 'https://via.placeholder.com/40';
             document.getElementById('user-display-name').textContent = currentUser.displayName || currentUser.email;
 
-            if (isAdmin) {
-                adminSection.classList.remove('hidden');
-            }
+            if (isAdmin) adminSection.classList.remove('hidden');
         }
 
         function updateSleepButtonUI() {
@@ -524,29 +562,20 @@
             }
         }
 
-        // Переключатель сна
         toggleSleepBtn.addEventListener('click', async () => {
             try {
                 await setDoc(doc(db, "settings", "status"), { isSleeping: !isSiteSleeping });
-            } catch (err) {
-                alert("Ошибка изменения состояния: " + err.message);
-            }
+                showToast(isSiteSleeping ? "Сайт разморожен" : "Сайт усыплен", isSiteSleeping ? "wb_sunny" : "bedtime");
+            } catch (err) { showToast("Ошибка: " + err.message, "error"); }
         });
 
-        // Подписка на состояние сессии пользователя
+        // 2. Слушатель пользователя
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             if (user) {
-                // 2. ЖИВОЙ СЛУШАТЕЛЬ: Данные о блокировках пользователя меняются на лету
                 onSnapshot(doc(db, "users", user.uid), async (snapshot) => {
                     if (!snapshot.exists()) {
-                        const isCurrentUserAdmin = (user.email === ADMIN_EMAIL);
-                        myUserData = { 
-                            name: user.displayName || "Пользователь", 
-                            email: user.email, 
-                            isAdmin: isCurrentUserAdmin, 
-                            isBlocked: false 
-                        };
+                        myUserData = { name: user.displayName || "Пользователь", email: user.email, isAdmin: (user.email === ADMIN_EMAIL), isBlocked: false };
                         await setDoc(doc(db, "users", user.uid), myUserData);
                     } else {
                         myUserData = snapshot.data();
@@ -555,14 +584,8 @@
                             await updateDoc(doc(db, "users", user.uid), { isAdmin: true });
                         }
                     }
-                    
                     renderInterface();
-                    
-                    if (myUserData.isAdmin) {
-                        listenUsersList(); 
-                    }
-                }, (err) => {
-                    console.error("Firestore error:", err);
+                    if (myUserData.isAdmin) listenUsersList();
                 });
             } else {
                 myUserData = null;
@@ -570,130 +593,159 @@
             }
         });
 
-        // Функция рендеринга ключа в стиле MD3
-        function renderKey(data) {
+        // Отрисовка данных ключа
+        function renderKeyData(data) {
             document.getElementById('get-key-btn').classList.add('hidden');
             const container = document.getElementById('key-result-container');
-            const display = document.getElementById('key-display');
+            container.classList.remove('hidden');
+            
+            document.getElementById('key-display').textContent = data.value;
             const expiry = document.getElementById('expiry-display');
             const actionBtn = document.getElementById('action-btn');
             const actionIcon = document.getElementById('action-icon');
             const actionText = document.getElementById('action-text');
 
-            container.classList.remove('hidden');
-            display.textContent = data.value;
-            
             if (data.expiresAt && typeof data.expiresAt.toDate === 'function') {
                 const date = data.expiresAt.toDate();
-                expiry.innerHTML = `<span class="icon" style="font-size:14px;">schedule</span>Истекает: ${date.toLocaleDateString()} в ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                expiry.innerHTML = `<span class="icon" style="font-size:16px;">schedule</span>До: ${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
             } else {
-                expiry.innerHTML = `<span class="icon" style="font-size:14px;">schedule</span>Срок действия не ограничен`;
+                expiry.innerHTML = `<span class="icon" style="font-size:16px;">all_inclusive</span>Без лимита времени`;
             }
 
             if (data.type === 'link') {
-                actionText.textContent = "Перейти по ссылке";
-                actionIcon.textContent = "open_in_new";
+                actionText.textContent = "Перейти"; actionIcon.textContent = "open_in_new";
                 actionBtn.onclick = () => window.open(data.value, '_blank');
             } else {
-                actionText.textContent = "Скопировать ключ";
-                actionIcon.textContent = "content_copy";
+                actionText.textContent = "Копировать"; actionIcon.textContent = "content_copy";
                 actionBtn.onclick = () => {
                     navigator.clipboard.writeText(data.value);
-                    actionText.textContent = "Скопировано!";
-                    actionIcon.textContent = "done";
-                    setTimeout(() => {
-                        actionText.textContent = "Скопировать ключ";
-                        actionIcon.textContent = "content_copy";
-                    }, 2000);
+                    showToast("Скопировано в буфер", "content_paste");
                 };
             }
         }
 
-        // Кнопка подписки на живое получение общего ключа
-        document.getElementById('get-key-btn').addEventListener('click', () => {
-            if (unsubKey) unsubKey();
+        // АЛГОРИТМ ПОЛУЧЕНИЯ САМОГО СВЕЖЕГО КЛЮЧА
+        async function fetchLatestKey(showFeedback = false) {
+            try {
+                // Сортировка по дате создания, чтобы ВСЕГДА брать самый новый ключ
+                const q = query(collection(db, "vpn_keys"), orderBy("createdAt", "desc"), limit(1));
+                const snap = await getDocs(q);
 
-            // 3. ЖИВОЙ СЛУШАТЕЛЬ КЛЮЧА: Если админ меняет/удаляет ключ, интерфейс юзеров меняется на лету
-            unsubKey = onSnapshot(query(collection(db, "vpn_keys"), limit(1)), (snapshot) => {
-                if (!snapshot.empty) {
-                    renderKey(snapshot.docs[0].data());
+                if (!snap.empty) {
+                    const latestDoc = snap.docs[0];
+                    const newData = latestDoc.data();
+                    
+                    if (latestDoc.id === currentKeyId) {
+                        if (showFeedback) showToast("Новых ключей пока нет.", "info");
+                    } else {
+                        currentKeyId = latestDoc.id;
+                        renderKeyData(newData);
+                        if (showFeedback) showToast("Ключ обновлен!", "check_circle");
+                    }
                 } else {
                     document.getElementById('get-key-btn').classList.remove('hidden');
                     document.getElementById('key-result-container').classList.add('hidden');
-                    alert("Администратор еще не опубликовал общий ключ доступа.");
+                    currentKeyId = null;
+                    if (showFeedback) showToast("В базе нет доступных ключей.", "warning");
                 }
-            }, (err) => {
-                alert("Ошибка ключа: " + err.message);
-            });
-        });
+            } catch (err) { showToast("Ошибка загрузки: " + err.message, "error"); }
+        }
 
-        // 4. ЖИВОЙ СЛУШАТЕЛЬ ДЛЯ АДМИНА: Список пользователей обновляется сам
+        document.getElementById('get-key-btn').addEventListener('click', () => fetchLatestKey(false));
+        document.getElementById('refresh-key-btn').addEventListener('click', () => fetchLatestKey(true));
+
+        // Админ: Управление пользователями
         function listenUsersList() {
             if (unsubUsersList) unsubUsersList();
-
             unsubUsersList = onSnapshot(collection(db, "users"), (snapshot) => {
                 const listContainer = document.getElementById('users-list');
                 listContainer.innerHTML = "";
-
+                
+                let count = 0;
                 snapshot.forEach((userDoc) => {
+                    count++;
                     if (userDoc.id === currentUser.uid) return; 
                     const u = userDoc.data();
                     
                     const item = document.createElement('div');
                     item.className = 'list-item';
                     item.innerHTML = `
-                        <div>
-                            <strong style="color:var(--md-sys-color-on-surface);">${u.name}</strong><br>
-                            <span style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">${u.email}</span>
+                        <div class="list-item-info">
+                            <strong style="color:var(--md-sys-color-on-surface); font-size:14px;">${u.name}</strong><br>
+                            <span style="font-size:12px;color:var(--md-sys-color-on-surface-variant);">${u.email}</span>
                         </div>
-                        <button class="list-item-btn ${u.isBlocked ? 'btn-success' : 'btn-danger'}" id="block-btn-${userDoc.id}">
-                            <span class="icon" style="font-size:14px;">${u.isBlocked ? 'check_circle' : 'block'}</span>
-                            ${u.isBlocked ? 'Разблок.' : 'Бан'}
-                        </button>
+                        <div class="list-item-actions">
+                            <button class="icon-btn" title="Копировать Email" id="copy-email-${userDoc.id}">
+                                <span class="icon" style="font-size:18px;">mail</span>
+                            </button>
+                            <button class="status-btn ${u.isBlocked ? 'btn-success' : 'btn-danger'}" id="block-btn-${userDoc.id}">
+                                <span class="icon" style="font-size:16px;">${u.isBlocked ? 'lock_open' : 'lock'}</span>
+                                ${u.isBlocked ? 'Разблок.' : 'Бан'}
+                            </button>
+                        </div>
                     `;
                     listContainer.appendChild(item);
 
+                    // Копирование email
+                    document.getElementById(`copy-email-${userDoc.id}`).onclick = () => {
+                        navigator.clipboard.writeText(u.email);
+                        showToast(`Email ${u.email} скопирован`, "content_copy");
+                    };
+
+                    // Блокировка
                     document.getElementById(`block-btn-${userDoc.id}`).onclick = async () => {
                         try {
                             await updateDoc(doc(db, "users", userDoc.id), { isBlocked: !u.isBlocked });
-                        } catch (blockErr) {
-                            alert("Ошибка изменения статуса: " + blockErr.message);
-                        }
+                            showToast(u.isBlocked ? `Пользователь ${u.name} разблокирован` : `Пользователь ${u.name} заблокирован`, u.isBlocked ? "lock_open" : "lock");
+                        } catch (blockErr) { showToast("Ошибка: " + blockErr.message, "error"); }
                     };
                 });
+                
+                document.getElementById('users-count-badge').textContent = `Юзеров: ${count}`;
             });
         }
 
-        // Перезапись текущего общего ключа
+        // Админ: Публикация нового ключа с меткой времени
         document.getElementById('add-key-btn').addEventListener('click', async () => {
             const val = document.getElementById('new-key-value').value;
             const type = document.getElementById('new-key-type').value;
             const expiryInput = document.getElementById('new-key-expiry').value;
 
-            if (!val || !expiryInput) return alert("Заполните все параметры конфигурации!");
+            if (!val || !expiryInput) { showToast("Заполните все параметры конфигурации!", "warning"); return; }
 
             try {
                 const expiryDate = new Date(expiryInput);
-
-                // Чистим старые ключи перед загрузкой нового общего
-                const currentKeysSnap = await getDocs(collection(db, "vpn_keys"));
-                currentKeysSnap.forEach(async (kDoc) => {
-                    await deleteDoc(doc(db, "vpn_keys", kDoc.id));
-                });
-
+                
+                // Добавляем новый ключ в базу с меткой времени создания
                 await addDoc(collection(db, "vpn_keys"), {
                     value: val,
                     type: type,
-                    expiresAt: expiryDate
+                    expiresAt: expiryDate,
+                    createdAt: serverTimestamp() // ВАЖНО: Для правильной сортировки свежих ключей
                 });
 
-                alert("Новая конфигурация опубликована в реальном времени!");
+                showToast("Новая конфигурация опубликована!", "publish");
                 document.getElementById('new-key-value').value = "";
                 document.getElementById('new-key-expiry').value = "";
-            } catch (addKeyErr) {
-                alert("Ошибка отправки ключа: " + addKeyErr.message);
+            } catch (addKeyErr) { showToast("Ошибка публикации: " + addKeyErr.message, "error"); }
+        });
+
+        // Админ: Очистка всех старых ключей
+        document.getElementById('clear-keys-btn').addEventListener('click', async () => {
+            if(confirm("Вы уверены, что хотите безвозвратно удалить ВСЕ опубликованные ключи из базы?")) {
+                try {
+                    const currentKeysSnap = await getDocs(collection(db, "vpn_keys"));
+                    let deletedCount = 0;
+                    currentKeysSnap.forEach(async (kDoc) => {
+                        await deleteDoc(doc(db, "vpn_keys", kDoc.id));
+                        deletedCount++;
+                    });
+                    currentKeyId = null; // Сбрасываем кэш
+                    showToast(`Очищено ключей: ${deletedCount}`, "delete");
+                } catch (err) { showToast("Ошибка очистки: " + err.message, "error"); }
             }
         });
+
     </script>
 </body>
 </html>
