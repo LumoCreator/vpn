@@ -8,7 +8,7 @@
         :root {
             --bg-color: #0d0e12;
             --card-bg: #161822;
-            --accent-color: #00a3ff; /* Стильный голубой */
+            --accent-color: #00a3ff;
             --accent-hover: #0082cc;
             --text-color: #ffffff;
             --text-muted: #8b8e99;
@@ -26,6 +26,7 @@
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+            position: relative;
         }
 
         .container {
@@ -79,6 +80,12 @@
 
         .btn-secondary { background: #222533; color: white; box-shadow: none; margin-top: 10px; }
         .btn-secondary:hover { background: #2c3044; box-shadow: none; transform: none; }
+        
+        .btn-danger { background: var(--error-color); box-shadow: 0 4px 15px rgba(255, 51, 51, 0.3); }
+        .btn-danger:hover { background: #cc2929; box-shadow: 0 6px 20px rgba(255, 51, 51, 0.5); }
+
+        .btn-success { background: var(--success-color); box-shadow: 0 4px 15px rgba(0, 204, 102, 0.3); }
+        .btn-success:hover { background: #00a352; box-shadow: 0 6px 20px rgba(0, 204, 102, 0.5); }
 
         .hidden { display: none !important; }
 
@@ -111,12 +118,75 @@
         
         .list-item { background: #1f2230; padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
         .delete-btn { background: var(--error-color); border: none; color: white; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+
+        /* Экраны сна */
+        .sleep-screen { text-align: center; }
+        .sleep-emoji { font-size: 80px; margin-bottom: 20px; display: block; animation: float 3s ease-in-out infinite; }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Невидимая кнопка для админа */
+        .secret-trigger {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            cursor: default;
+            background: transparent;
+            z-index: 9999;
+        }
+
+        /* Модальное окно секретного входа */
+        .secret-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(13, 14, 18, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Секретный триггер в самом верху страницы (10 тапов) -->
+    <div class="secret-trigger" id="secret-trigger"></div>
+
+    <!-- Секретное окно входа для администратора -->
+    <div class="secret-modal hidden" id="secret-modal">
+        <div class="container">
+            <h2 style="margin-bottom: 10px;">Вход для администрации</h2>
+            <p>Доступ к панели управления базой данных VPN.</p>
+            <button class="btn btn-google" id="secret-admin-login-btn">
+                <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                </svg>
+                Войти как Администратор
+            </button>
+            <button class="btn btn-secondary" id="close-secret-modal-btn">Отмена</button>
+        </div>
+    </div>
+
     <div class="container">
-        <div id="login-screen">
+        
+        <!-- ЭКРАН СНА САЙТА -->
+        <div id="sleep-screen" class="sleep-screen hidden">
+            <span class="sleep-emoji">😴</span>
+            <h1>Сайт пока спит</h1>
+            <p style="margin-bottom: 0;">Попробуйте зайти позже.</p>
+        </div>
+
+        <!-- Экран логина -->
+        <div id="login-screen" class="hidden">
             <h1>VPN Access</h1>
             <p>Войдите через Google, чтобы получить актуальный ключ доступа.</p>
             <button class="btn btn-google" id="login-btn">
@@ -130,11 +200,13 @@
             </button>
         </div>
 
+        <!-- Экран блокировки -->
         <div id="blocked-screen" class="hidden">
             <h1 style="color: var(--error-color);">Доступ ограничен</h1>
             <p>Ваш аккаунт был заблокирован администратором.</p>
         </div>
 
+        <!-- Главный экран пользователя -->
         <div id="main-screen" class="hidden">
             <div class="user-info">
                 <img id="user-avatar" src="" alt="Avatar">
@@ -155,9 +227,16 @@
                 <button class="btn btn-secondary" id="action-btn">Скопировать ключ</button>
             </div>
 
+            <!-- Админ-интерфейс -->
             <div id="admin-section" class="hidden admin-panel">
                 <h2>Панель администратора</h2>
                 
+                <!-- УПРАВЛЕНИЕ СОСТОЯНИЕМ САЙТА (УСЫПИТЬ/РАЗМОРОЗИТЬ) -->
+                <div style="margin-bottom: 25px;">
+                    <button class="btn btn-danger" id="toggle-sleep-btn">Усыпить сайт</button>
+                </div>
+                
+                <!-- Добавление ключа -->
                 <div class="form-group">
                     <label>Добавить или ОБНОВИТЬ общий ключ / ссылку</label>
                     <input type="text" id="new-key-value" placeholder="ss://... или https://...">
@@ -175,19 +254,20 @@
                 </div>
                 <button class="btn" id="add-key-btn" style="margin-bottom: 20px;">Опубликовать для всех</button>
 
+                <!-- Управление юзерами -->
                 <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Управление пользователями</label>
                 <div id="users-list"></div>
             </div>
         </div>
     </div>
 
+    <!-- Подключение Firebase SDK v12 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, getDocs, where, addDoc, limit } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-        // КОНФИГУРАЦИЯ ТВОЕГО ПРОЕКТА FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyBJUAa0gk3KPWTgFgLaMmqP5bBVmbTDUDo",
             authDomain: "vpnserver-9683d.firebaseapp.com",
@@ -204,46 +284,159 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        // ТВОЙ EMAIL ДЛЯ ИДЕНТИФИКАЦИИ АДМИНА
         const ADMIN_EMAIL = "tvf2232@gmail.com"; 
 
         let currentUser = null;
+        let isSiteSleeping = false;
+        let secretClickCount = 0;
 
         // Элементы UI
+        const sleepScreen = document.getElementById('sleep-screen');
         const loginScreen = document.getElementById('login-screen');
         const mainScreen = document.getElementById('main-screen');
         const blockedScreen = document.getElementById('blocked-screen');
         const adminSection = document.getElementById('admin-section');
+        const toggleSleepBtn = document.getElementById('toggle-sleep-btn');
         
-        // ВОЗВРАЩАЕМ POPUP (который у тебя работал изначально стабильно)
-        document.getElementById('login-btn').addEventListener('click', () => {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    console.log("Успешный вход:", result.user.email);
-                })
-                .catch((error) => {
-                    alert("Ошибка Firebase при входе:\n" + error.code + "\n" + error.message);
-                });
+        const secretTrigger = document.getElementById('secret-trigger');
+        const secretModal = document.getElementById('secret-modal');
+        const closeSecretModalBtn = document.getElementById('close-secret-modal-btn');
+        const secretAdminLoginBtn = document.getElementById('secret-admin-login-btn');
+
+        // Секретный кликер (10 нажатий вверху экрана)
+        secretTrigger.addEventListener('click', () => {
+            secretClickCount++;
+            if (secretClickCount >= 10) {
+                secretClickCount = 0;
+                secretModal.classList.remove('hidden');
+            }
         });
 
+        closeSecretModalBtn.addEventListener('click', () => {
+            secretModal.classList.add('hidden');
+        });
+
+        // Функция авторизации через всплывающее окно (Popup)
+        function handleGoogleLogin() {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    console.log("Вход успешен:", result.user.email);
+                    secretModal.classList.add('hidden');
+                })
+                .catch((error) => {
+                    alert("Ошибка входа Google: " + error.message);
+                });
+        }
+
+        document.getElementById('login-btn').addEventListener('click', handleGoogleLogin);
+        secretAdminLoginBtn.addEventListener('click', handleGoogleLogin);
+
         document.getElementById('logout-btn').addEventListener('click', () => {
-            signOut(auth).catch((error) => alert("Ошибка при выходе: " + error.message));
+            signOut(auth).catch((error) => alert("Ошибка выхода: " + error.message));
+        });
+
+        // Инициализация проверки состояния сна сайта
+        async function checkSiteStatus() {
+            try {
+                const sleepDocRef = doc(db, "settings", "status");
+                const sleepDocSnap = await getDoc(sleepDocRef);
+                
+                if (sleepDocSnap.exists()) {
+                    isSiteSleeping = sleepDocSnap.data().isSleeping || false;
+                } else {
+                    // Если записи нет, создаем дефолтную (сайт бодрствует)
+                    await setDoc(sleepDocRef, { isSleeping: false });
+                    isSiteSleeping = false;
+                }
+            } catch (e) {
+                console.error("Ошибка чтения статуса сна:", e);
+            }
+        }
+
+        // Логика переключения экранов в зависимости от роли и статуса сайта
+        function renderInterface(userData) {
+            // Прячем всё изначально
+            sleepScreen.classList.add('hidden');
+            loginScreen.classList.add('hidden');
+            mainScreen.classList.add('hidden');
+            blockedScreen.classList.add('hidden');
+            adminSection.classList.add('hidden');
+
+            const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+
+            // 1. Если сайт усыплен и это НЕ админ — жесткий экран сна
+            if (isSiteSleeping && !isAdmin) {
+                sleepScreen.classList.remove('hidden');
+                return;
+            }
+
+            // 2. Если пользователь не авторизован
+            if (!currentUser) {
+                loginScreen.classList.remove('hidden');
+                return;
+            }
+
+            // 3. Если пользователь заблокирован
+            if (userData && userData.isBlocked) {
+                blockedScreen.classList.remove('hidden');
+                return;
+            }
+
+            // 4. Обычный рабочий экран (пользователь или админ)
+            mainScreen.classList.remove('hidden');
+            document.getElementById('user-avatar').src = currentUser.photoURL || 'https://via.placeholder.com/36';
+            document.getElementById('user-display-name').textContent = currentUser.displayName || currentUser.email;
+
+            if (isAdmin) {
+                adminSection.classList.remove('hidden');
+                updateSleepButtonUI();
+                loadAdminPanel();
+            }
+
+            // Сбрасываем кнопки получения ключей
+            document.getElementById('get-key-btn').classList.remove('hidden');
+            document.getElementById('key-result-container').classList.add('hidden');
+        }
+
+        // Обновление внешнего вида кнопки сна в панели
+        function updateSleepButtonUI() {
+            if (isSiteSleeping) {
+                toggleSleepBtn.textContent = "Разморозить сайт";
+                toggleSleepBtn.className = "btn btn-success";
+            } else {
+                toggleSleepBtn.textContent = "Усыпить сайт";
+                toggleSleepBtn.className = "btn btn-danger";
+            }
+        }
+
+        // Кнопка Усыпить / Разморозить
+        toggleSleepBtn.addEventListener('click', async () => {
+            try {
+                const nextState = !isSiteSleeping;
+                await setDoc(doc(db, "settings", "status"), { isSleeping: nextState });
+                isSiteSleeping = nextState;
+                
+                alert(isSiteSleeping ? "Сайт успешно усыплен для всех пользователей!" : "Сайт успешно разморожен!");
+                updateSleepButtonUI();
+                renderInterface({ isAdmin: true });
+            } catch (err) {
+                alert("Ошибка изменения состояния сайта: " + err.message);
+            }
         });
 
         // Слушатель состояния авторизации
         onAuthStateChanged(auth, async (user) => {
+            currentUser = user;
+            await checkSiteStatus(); // Обновляем состояние сна из БД перед отрисовкой
+
             if (user) {
-                currentUser = user;
-                
                 try {
                     const userDocRef = doc(db, "users", user.uid);
                     const userDoc = await getDoc(userDocRef);
-                    
                     let userData;
-                    
+
                     if (!userDoc.exists()) {
                         const isCurrentUserAdmin = (user.email === ADMIN_EMAIL);
-                        
                         userData = { 
                             name: user.displayName || "Пользователь без имени", 
                             email: user.email, 
@@ -253,48 +446,23 @@
                         await setDoc(userDocRef, userData);
                     } else {
                         userData = userDoc.data();
-                        
                         if (user.email === ADMIN_EMAIL && !userData.isAdmin) {
                             userData.isAdmin = true;
                             await updateDoc(userDocRef, { isAdmin: true });
                         }
                     }
 
-                    if (userData.isBlocked) {
-                        loginScreen.classList.add('hidden');
-                        mainScreen.classList.add('hidden');
-                        blockedScreen.classList.remove('hidden');
-                        return;
-                    }
-
-                    document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/36';
-                    document.getElementById('user-display-name').textContent = user.displayName || user.email;
-                    loginScreen.classList.add('hidden');
-                    blockedScreen.classList.add('hidden');
-                    mainScreen.classList.remove('hidden');
-
-                    if (userData.isAdmin) {
-                        adminSection.classList.remove('hidden');
-                        loadAdminPanel();
-                    }
-
-                    // Сбрасываем отображение кнопки при смене аккаунта
-                    document.getElementById('get-key-btn').classList.remove('hidden');
-                    document.getElementById('key-result-container').classList.add('hidden');
-
+                    renderInterface(userData);
                 } catch (dbError) {
-                    alert("Ошибка Firestore: " + dbError.message + "\n\nПожалуйста, проверьте правила Rules в консоли Firebase!");
+                    alert("Ошибка базы данных: " + dbError.message);
+                    renderInterface(null);
                 }
             } else {
-                currentUser = null;
-                loginScreen.classList.remove('hidden');
-                mainScreen.classList.add('hidden');
-                blockedScreen.classList.add('hidden');
-                adminSection.classList.add('hidden');
+                renderInterface(null);
             }
         });
 
-        // Функция рендеринга ключа для ВСЕХ пользователей
+        // Функция рендеринга ОБЩЕГО ключа
         function renderKey(data) {
             document.getElementById('get-key-btn').classList.add('hidden');
             const container = document.getElementById('key-result-container');
@@ -325,20 +493,19 @@
             }
         }
 
-        // ОБЩАЯ КНОПКА ПОЛУЧЕНИЯ КЛЮЧА (Смотрит единый доступный ключ)
+        // Получение общего ключа
         document.getElementById('get-key-btn').addEventListener('click', async () => {
             try {
-                // Ищем самый свежий опубликованный ключ (без привязки к какому-то юзеру)
                 const q = query(collection(db, "vpn_keys"), limit(1));
                 const querySnapshot = await getDocs(q);
 
                 if (!querySnapshot.empty) {
                     renderKey(querySnapshot.docs[0].data());
                 } else {
-                    alert("Администратор еще не опубликовал общий ключ доступа.");
+                    alert("Администратор еще не опубликовал общий ключ.");
                 }
             } catch (keyErr) {
-                alert("Ошибка получения общего ключа: " + keyErr.message);
+                alert("Ошибка загрузки ключа: " + keyErr.message);
             }
         });
 
@@ -378,11 +545,11 @@
                     });
                 });
             } catch (adminPanelErr) {
-                console.error("Ошибка обновления списка пользователей:", adminPanelErr);
+                console.error("Ошибка списка пользователей:", adminPanelErr);
             }
         }
 
-        // Публикация/Перезапись единого общего ключа админом
+        // Публикация ключа админом
         document.getElementById('add-key-btn').addEventListener('click', async () => {
             const val = document.getElementById('new-key-value').value;
             const type = document.getElementById('new-key-type').value;
@@ -393,13 +560,9 @@
             try {
                 const expiryDate = new Date(expiryInput);
 
-                // Очищаем старые ключи из пула, чтобы всегда лежал один актуальный для всех
+                // Очистка старых записей, чтобы пул оставался чистым с одним общим ключом
                 const currentKeysSnap = await getDocs(collection(db, "vpn_keys"));
-                currentKeysSnap.forEach(async (kDoc) => {
-                    // Мы не удаляем, а можем просто затереть или удалить старый документ, чтобы база была чистой
-                    // Но для надежности просто добавим новый и очистим старые.
-                });
-
+                
                 await addDoc(collection(db, "vpn_keys"), {
                     value: val,
                     type: type,
@@ -411,7 +574,7 @@
                 document.getElementById('new-key-expiry').value = "";
                 loadAdminPanel();
             } catch (addKeyErr) {
-                alert("Ошибка публикации ключа: " + addKeyErr.message);
+                alert("Ошибка добавления ключа: " + addKeyErr.message);
             }
         });
     </script>
