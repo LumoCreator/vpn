@@ -96,17 +96,20 @@
 <body>
 
     <div class="container">
+        <!-- Экран логина -->
         <div id="login-screen">
             <h1>VPN Access</h1>
             <p>Войдите через Google, чтобы получить свой персональный ключ доступа.</p>
             <button class="btn" id="login-btn">Войти через Google</button>
         </div>
 
+        <!-- Экран блокировки -->
         <div id="blocked-screen" class="hidden">
             <h1 style="color: var(--error-color);">Доступ ограничен</h1>
             <p>Ваш аккаунт был заблокирован администратором.</p>
         </div>
 
+        <!-- Главный экран пользователя -->
         <div id="main-screen" class="hidden">
             <div class="user-info">
                 <img id="user-avatar" src="" alt="Avatar">
@@ -127,9 +130,11 @@
                 <button class="btn btn-secondary" id="action-btn">Скопировать ключ</button>
             </div>
 
+            <!-- Админ-интерфейс -->
             <div id="admin-section" class="hidden admin-panel">
                 <h2>Панель администратора</h2>
                 
+                <!-- Добавление ключа -->
                 <div class="form-group">
                     <label>Добавить новый ключ / ссылку</label>
                     <input type="text" id="new-key-value" placeholder="ss://... или https://...">
@@ -147,19 +152,21 @@
                 </div>
                 <button class="btn" id="add-key-btn" style="margin-bottom: 20px;">Добавить ключ в пул</button>
 
+                <!-- Управление юзерами -->
                 <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Управление пользователями</label>
                 <div id="users-list"></div>
             </div>
         </div>
     </div>
 
+    <!-- Подключение Firebase SDK v12 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, getDocs, where, addDoc, limit } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-        // ТВОИ КЛЮЧИ ИЗ ИНИЦИАЛИЗАЦИИ
+        // КОНФИГУРАЦИЯ ТВОЕГО ПРОЕКТА FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyBJUAa0gk3KPWTgFgLaMmqP5bBVmbTDUDo",
             authDomain: "vpnserver-9683d.firebaseapp.com",
@@ -176,7 +183,7 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        // НАСТРОЙКА АДМИНА: Впиши сюда свой личный Google Email
+        // ТВОЙ EMAIL ДЛЯ ИДЕНТИФИКАЦИИ АДМИНА
         const ADMIN_EMAIL = "tvf2232@gmail.com"; 
 
         let currentUser = null;
@@ -188,60 +195,78 @@
         const blockedScreen = document.getElementById('blocked-screen');
         const adminSection = document.getElementById('admin-section');
         
-        // Авторизация
-        document.getElementById('login-btn').addEventListener('click', () => signInWithPopup(auth, provider));
-        document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+        // Авторизация с обработчиком ошибок для вывода на телефоне
+        document.getElementById('login-btn').addEventListener('click', () => {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    console.log("Вход выполнен успешно:", result.user);
+                })
+                .catch((error) => {
+                    console.error("Ошибка авторизации:", error);
+                    // Выводим ошибку в системном окне телефона
+                    alert("ОШИБКА FIREBASE!\n\nКод: " + error.code + "\n\nСообщение: " + error.message);
+                });
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            signOut(auth)
+                .catch((error) => alert("Ошибка при выходе: " + error.message));
+        });
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
                 
-                const userDocRef = doc(db, "users", user.uid);
-                const userDoc = await getDoc(userDocRef);
-                
-                let userData;
-                
-                if (!userDoc.exists()) {
-                    // Если зашел впервые — проверяем на админа по email
-                    const isCurrentUserAdmin = (user.email === ADMIN_EMAIL);
+                try {
+                    const userDocRef = doc(db, "users", user.uid);
+                    const userDoc = await getDoc(userDocRef);
                     
-                    userData = { 
-                        name: user.displayName, 
-                        email: user.email, 
-                        isAdmin: isCurrentUserAdmin, 
-                        isBlocked: false 
-                    };
-                    await setDoc(userDocRef, userData);
-                } else {
-                    userData = userDoc.data();
+                    let userData;
                     
-                    // На всякий случай обновляем флаг админа, если email совпал позже
-                    if (user.email === ADMIN_EMAIL && !userData.isAdmin) {
-                        userData.isAdmin = true;
-                        await updateDoc(userDocRef, { isAdmin: true });
+                    if (!userDoc.exists()) {
+                        // Если зашел впервые — проверяем на админа по установленной почте
+                        const isCurrentUserAdmin = (user.email === ADMIN_EMAIL);
+                        
+                        userData = { 
+                            name: user.displayName || "Пользователь без имени", 
+                            email: user.email, 
+                            isAdmin: isCurrentUserAdmin, 
+                            isBlocked: false 
+                        };
+                        await setDoc(userDocRef, userData);
+                    } else {
+                        userData = userDoc.data();
+                        
+                        // Если зашел существующий юзер, но его почта совпадает с админской
+                        if (user.email === ADMIN_EMAIL && !userData.isAdmin) {
+                            userData.isAdmin = true;
+                            await updateDoc(userDocRef, { isAdmin: true });
+                        }
                     }
-                }
 
-                if (userData.isBlocked) {
+                    if (userData.isBlocked) {
+                        loginScreen.classList.add('hidden');
+                        mainScreen.classList.add('hidden');
+                        blockedScreen.classList.remove('hidden');
+                        return;
+                    }
+
+                    // Настройка отображения профиля юзера
+                    document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/36';
+                    document.getElementById('user-display-name').textContent = user.displayName || user.email;
                     loginScreen.classList.add('hidden');
-                    mainScreen.classList.add('hidden');
-                    blockedScreen.classList.remove('hidden');
-                    return;
+                    blockedScreen.classList.add('hidden');
+                    mainScreen.classList.remove('hidden');
+
+                    if (userData.isAdmin) {
+                        adminSection.classList.remove('hidden');
+                        loadAdminPanel();
+                    }
+
+                    checkUserKey();
+                } catch (dbError) {
+                    alert("Ошибка базы данных Firestore: " + dbError.message + "\n\nПроверьте правила доступа Rules в Firebase Console!");
                 }
-
-                // Отображаем интерфейс юзера
-                document.getElementById('user-avatar').src = user.photoURL;
-                document.getElementById('user-display-name').textContent = user.displayName;
-                loginScreen.classList.add('hidden');
-                blockedScreen.classList.add('hidden');
-                mainScreen.classList.remove('hidden');
-
-                if (userData.isAdmin) {
-                    adminSection.classList.remove('hidden');
-                    loadAdminPanel();
-                }
-
-                checkUserKey();
             } else {
                 currentUser = null;
                 loginScreen.classList.remove('hidden');
@@ -251,15 +276,19 @@
             }
         });
 
-        // Проверка, есть ли уже ключ у юзера
+        // Проверка, привязан ли ключ за пользователем
         async function checkUserKey() {
-            const q = query(collection(db, "vpn_keys"), where("userId", "==", currentUser.uid), limit(1));
-            const querySnapshot = await getDocs(q);
-            
-            if (!querySnapshot.empty) {
-                querySnapshot.forEach((doc) => {
-                    renderKey(doc.data());
-                });
+            try {
+                const q = query(collection(db, "vpn_keys"), where("userId", "==", currentUser.uid), limit(1));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    querySnapshot.forEach((doc) => {
+                        renderKey(doc.data());
+                    });
+                }
+            } catch (err) {
+                console.error(err);
             }
         }
 
@@ -274,8 +303,12 @@
             container.classList.remove('hidden');
             display.textContent = data.value;
             
-            const date = data.expiresAt.toDate();
-            expiry.textContent = `Истекает: ${date.toLocaleDateString()} в ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            if (data.expiresAt && typeof data.expiresAt.toDate === 'function') {
+                const date = data.expiresAt.toDate();
+                expiry.textContent = `Истекает: ${date.toLocaleDateString()} в ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            } else {
+                expiry.textContent = "Срок действия не указан";
+            }
 
             if (data.type === 'link') {
                 actionBtn.textContent = "Перейти по ссылке";
@@ -290,72 +323,91 @@
             }
         }
 
-        // Кнопка "Получить ключ"
+        // Логика получения свободного ключа кнопкой
         document.getElementById('get-key-btn').addEventListener('click', async () => {
-            const q = query(collection(db, "vpn_keys"), where("userId", "==", ""), limit(1));
-            const querySnapshot = await getDocs(q);
+            try {
+                const q = query(collection(db, "vpn_keys"), where("userId", "==", ""), limit(1));
+                const querySnapshot = await getDocs(q);
 
-            if (!querySnapshot.empty) {
-                const keyDoc = querySnapshot.docs[0];
-                await updateDoc(doc(db, "vpn_keys", keyDoc.id), {
-                    userId: currentUser.uid
-                });
-                renderKey({ ...keyDoc.data(), userId: currentUser.uid });
-            } else {
-                alert("Свободных ключей пока нет. Обратитесь к администратору.");
+                if (!querySnapshot.empty) {
+                    const keyDoc = querySnapshot.docs[0];
+                    await updateDoc(doc(db, "vpn_keys", keyDoc.id), {
+                        userId: currentUser.uid
+                    });
+                    renderKey({ ...keyDoc.data(), userId: currentUser.uid });
+                } else {
+                    alert("Свободных ключей в базе пока нет. Пожалуйста, попросите администратора добавить их.");
+                }
+            } catch (keyErr) {
+                alert("Не удалось забрать ключ: " + keyErr.message);
             }
         });
 
-        // Панель управления админа
+        // Загрузка зарегистрированных юзеров в админку
         async function loadAdminPanel() {
-            const usersSnapshot = await getDocs(collection(db, "users"));
-            const listContainer = document.getElementById('users-list');
-            listContainer.innerHTML = "";
+            try {
+                const usersSnapshot = await getDocs(collection(db, "users"));
+                const listContainer = document.getElementById('users-list');
+                listContainer.innerHTML = "";
 
-            usersSnapshot.forEach((userDoc) => {
-                if (userDoc.id === currentUser.uid) return; 
-                const u = userDoc.data();
-                
-                const item = document.createElement('div');
-                item.className = 'list-item';
-                item.innerHTML = `
-                    <div>
-                        <strong>${u.name}</strong><br><span style="font-size:11px;color:var(--text-muted);">${u.email}</span>
-                    </div>
-                    <button class="delete-btn" style="background:${u.isBlocked ? var(--success-color) : var(--error-color)}">
-                        ${u.isBlocked ? 'Разблок.' : 'Блок'}
-                    </button>
-                `;
+                usersSnapshot.forEach((userDoc) => {
+                    if (userDoc.id === currentUser.uid) return; 
+                    const u = userDoc.data();
+                    
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.innerHTML = `
+                        <div>
+                            <strong>${u.name}</strong><br><span style="font-size:11px;color:var(--text-muted);">${u.email}</span>
+                        </div>
+                        <button class="delete-btn" id="block-btn-${userDoc.id}">
+                            ${u.isBlocked ? 'Разблок.' : 'Блок'}
+                        </button>
+                    `;
 
-                item.querySelector('button').addEventListener('click', async () => {
-                    await updateDoc(doc(db, "users", userDoc.id), { isBlocked: !u.isBlocked });
-                    loadAdminPanel(); 
+                    listContainer.appendChild(item);
+
+                    // Вешаем обработчик клика на кнопку блокировки
+                    document.getElementById(`block-btn-${userDoc.id}`).style.backgroundColor = u.isBlocked ? 'var(--success-color)' : 'var(--error-color)';
+                    document.getElementById(`block-btn-${userDoc.id}`).addEventListener('click', async () => {
+                        try {
+                            await updateDoc(doc(db, "users", userDoc.id), { isBlocked: !u.isBlocked });
+                            loadAdminPanel(); 
+                        } catch (blockErr) {
+                            alert("Ошибка изменения статуса пользователя: " + blockErr.message);
+                        }
+                    });
                 });
-
-                listContainer.appendChild(item);
-            });
+            } catch (adminPanelErr) {
+                console.error("Ошибка админ-панели:", adminPanelErr);
+            }
         }
 
-        // Добавление нового ключа админом
+        // Создание ключа администратором
         document.getElementById('add-key-btn').addEventListener('click', async () => {
             const val = document.getElementById('new-key-value').value;
             const type = document.getElementById('new-key-type').value;
             const expiryInput = document.getElementById('new-key-expiry').value;
 
-            if (!val || !expiryInput) return alert("Заполните все поля");
+            if (!val || !expiryInput) return alert("Заполните абсолютно все поля формы");
 
-            const expiryDate = new Date(expiryInput);
+            try {
+                const expiryDate = new Date(expiryInput);
 
-            await addDoc(collection(db, "vpn_keys"), {
-                value: val,
-                type: type,
-                expiresAt: expiryDate,
-                userId: ""
-            });
+                await addDoc(collection(db, "vpn_keys"), {
+                    value: val,
+                    type: type,
+                    expiresAt: expiryDate,
+                    userId: ""
+                });
 
-            alert("Ключ добавлен!");
-            document.getElementById('new-key-value').value = "";
-            loadAdminPanel();
+                alert("Ключ успешно добавлен в общую базу!");
+                document.getElementById('new-key-value').value = "";
+                document.getElementById('new-key-expiry').value = "";
+                loadAdminPanel();
+            } catch (addKeyErr) {
+                alert("Ошибка добавления ключа: " + addKeyErr.message);
+            }
         });
     </script>
 </body>
